@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  voting-app:
+    build:
+      context: .  
+      dockerfile: Dockerfile
+    container_name: voting-app
+    ports:
+      - "80:80"
+    environment:
+      - REDIS=redis
+      - REDIS_PWD=${REDIS_PWD}
+    depends_on:
+      redis:
+        condition: service_healthy
+    
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: always
+    command: redis-server --requirepass ${REDIS_PWD}
+    environment:
+      - REDIS_PASSWORD=${REDIS_PWD}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "$$REDIS_PWD", "ping"]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 5s
